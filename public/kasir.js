@@ -56,26 +56,53 @@ function switchTab(tab) {
   document.getElementById("pinErr").classList.add("d-none");
 }
 
+// ======================
+// LOGIN CUSTOMER (UPDATE ANTI BAJAK)
+// ======================
 function doLoginCustomer() {
-  var name = document.getElementById("inpName").value.trim();
+  var inputName = document.getElementById("inpName").value.trim();
   var wa   = document.getElementById("inpWa").value.trim();
-  if (!name) { showToast("Masukkan nama kamu dulu!", "error"); return; }
+  
+  if (!inputName) { showToast("Masukkan nama kamu dulu!", "error"); return; }
   if (!wa)   { showToast("Masukkan nomor WhatsApp kamu!", "error"); return; }
-
-  currentUser = { name: name, wa: wa };
-  isAdmin = false;
-  document.getElementById("greetUser").textContent = "Halo, " + name + "! 👋";
-  showPage("custApp");
 
   if (db) {
     var waClean = cleanWa(wa);
-    db.ref("customers/" + waClean).update({
-      name: name,
-      wa: waClean
+    var ref = db.ref("customers/" + waClean);
+    
+    // Kita suruh sistem ngecek database dulu sebelum masuk
+    ref.once("value", function(snap) {
+      var data = snap.val();
+      var finalName = inputName; // Default-nya pake nama yang diketik
+      
+      // Kalau nomor WA udah terdaftar DAN namanya bukan "Pelanggan VIP"
+      if (data && data.name && data.name !== "Pelanggan VIP") {
+        
+        // PENGAMAN: Cek apakah nama yang diketik SAMA dengan yang ada di database (abaikan huruf besar/kecil)
+        if (inputName.toLowerCase() !== data.name.toLowerCase()) {
+          showToast("❌ Gagal masuk! Nama dan Nomor WA tidak cocok.", "error");
+          return; // Stop proses login disini
+        }
+        
+        finalName = data.name; // Pake nama asli dari database
+      } else {
+        // Kalau masih "Pelanggan VIP" atau data baru, simpan/timpa nama baru
+        ref.update({
+          name: inputName,
+          wa: waClean
+        });
+      }
+
+      // Kalau lolos pengecekan, Masuk ke halaman aplikasi
+      currentUser = { name: finalName, wa: waClean };
+      isAdmin = false;
+      document.getElementById("greetUser").textContent = "Halo, " + finalName + "! 👋";
+      showPage("custApp");
+      
+      listenCustomerPoints(waClean);
+      showToast("Selamat datang, " + finalName + "! 🎉", "success");
     });
-    listenCustomerPoints(waClean);
   }
-  showToast("Selamat datang, " + name + "! 🎉", "success");
 }
 
 function doLoginAdmin() {
@@ -357,4 +384,4 @@ function showToast(msg, type) {
     el.style.animation = "toastOut .3s ease forwards";
     setTimeout(function(){ if(el.parentNode) el.remove(); }, 300);
   }, 3200);
-}
+     }
