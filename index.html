@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#e11d48" />
+  <meta name="description" content="Pesan Seblak Nyo-Nyor online, bayar saat ambil!" />
+  <title>Seblak Nyo-Nyor 🌶️</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+<!-- ===== SPLASH SCREEN ===== -->
+<div id="splashScreen" class="splash">
+  <div class="splash-content">
+    <div class="splash-logo-wrap">
+      <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="splash-logo" />
+      <div class="splash-ring"></div>
+    </div>
+    <h1 class="splash-brand">Seblak Nyo-Nyor</h1>
+    <p class="splash-tag">🌶️ Pedesnya Bikin Ketagihan!</p>
+    <div class="splash-loader"><div></div><div></div><div></div></div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div id="toastBox" class="toast-box"></div>
+
+<!-- ==================== LOGIN PAGE ==================== -->
+<div id="loginPage" class="page d-none">
+  <div class="login-bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
+  <div class="login-wrap">
+    <div class="login-hero">
+      <div class="hero-logo-ring">
+        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo Seblak Nyo-Nyor" class="hero-logo" />
+      </div>
+      <h1>Seblak Nyo-Nyor</h1>
+      <p>🌶️ Pedesnya Bikin Ketagihan!</p>
+    </div>
+
+    <div class="login-card">
+      <div class="tab-bar">
+        <button class="tab active" id="tabCust" onclick="switchTab('cust')">🛒 Pelanggan</button>
+        <button class="tab" id="tabAdmin" onclick="switchTab('admin')">🔐 Admin</button>
+      </div>
+
+      <div id="formCust" class="form-pane">
+        <div class="field">
+          <label>Nama Lengkap</label>
+          <div class="inp-wrap">
+            <span>👤</span>
+            <input type="text" id="inpName" placeholder="Masukkan nama kamu" autocomplete="name" />
+          </div>
+        </div>
+        <div class="field">
+          <label>Nomor WhatsApp</label>
+          <div class="inp-wrap">
+            <span>📱</span>
+            <input type="tel" id="inpWa" placeholder="Contoh: 081234567890" autocomplete="tel" />
+          </div>
+        </div>
+        <button class="btn-red btn-block" onclick="doLoginCustomer()">Mulai Pesan 🛒</button>
+      </div>
+
+      <div id="formAdmin" class="form-pane d-none">
+        <div class="field">
+          <label>PIN Admin</label>
+          <div class="inp-wrap">
+            <span>🔑</span>
+            <input type="password" id="inpPin" placeholder="••••••" maxlength="8" class="pin-field" />
+          </div>
+          <p id="pinErr" class="err-msg d-none">PIN salah, coba lagi! ❌</p>
+        </div>
+        <button class="btn-dark btn-block" onclick="doLoginAdmin()">Masuk Admin 🔐</button>
+      </div>
+    </div>
+
+    <p class="login-foot">© 2025 Seblak Nyo-Nyor</p>
+  </div>
+</div>
+
+<!-- ==================== CUSTOMER APP ==================== -->
+<div id="custApp" class="page d-none">
+
+  <header class="app-bar" id="appBar">
+    <div class="app-bar-inner">
+      <div class="app-brand">
+        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="bar-logo" />
+        <div>
+          <strong>Seblak Nyo-Nyor</strong>
+          <span id="greetUser">Halo!</span>
+        </div>
+      </div>
+      <div class="bar-actions">
+        <button class="icon-btn" onclick="goView('vStatus')" aria-label="Pesanan">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+        </button>
+        <button class="icon-btn cart-icon-btn" onclick="openCart()" aria-label="Keranjang">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+          <span id="cartCount" class="cart-dot d-none">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="closedBanner" class="closed-banner d-none">
+    🚪 <strong>Toko Sedang Tutup</strong> <span id="closedReason"></span>
+  </div>
+
+  <main class="app-main">
+
+    <!-- MENU VIEW -->
+    <div id="vMenu" class="view show">
+      <div class="section-head">
+        <h2>Menu Pilihan 🍽️</h2>
+        <p>Pesan sekarang, bayar saat ambil!</p>
+      </div>
+      <div class="menu-list" id="menuList"></div>
+    </div>
+
+    <!-- STATUS VIEW -->
+    <div id="vStatus" class="view">
+      <div class="section-head">
+        <h2>Status Pesanan 📋</h2>
+        <p>Lacak pesananmu di sini</p>
+      </div>
+      <div class="search-wrap">
+        <span>🔍</span>
+        <input type="text" id="searchInp" placeholder="Cari nama atau ID pesanan..." oninput="renderStatusList()" />
+      </div>
+      <div id="statusList" class="status-list"></div>
+    </div>
+
+    <!-- POIN VIEW -->
+    <div id="vPoin" class="view">
+      <div class="section-head">
+        <h2>Poin Saya ⭐</h2>
+        <p>Kumpulkan poin dari setiap pembelian!</p>
+      </div>
+
+      <!-- Kartu Poin Utama -->
+      <div class="points-hero-card">
+        <div class="points-hero-top">
+          <div class="points-star-icon">⭐</div>
+          <div class="points-hero-info">
+            <div class="points-hero-label">Total Poin Kamu</div>
+            <div class="points-hero-val" id="myPointsVal">0</div>
+          </div>
+        </div>
+        <div class="points-hero-sub" id="myPointsSub">Belum ada poin. Yuk mulai pesan!</div>
+        <div class="points-hero-orders">🛒 Total Pesanan: <strong id="myTotalOrders">0</strong> kali</div>
+      </div>
+
+      <!-- Info Cara Tukar -->
+      <div class="points-redeem-card">
+        <div class="points-redeem-title">🏪 Cara Menukar Poin</div>
+        <p class="points-redeem-desc">Poin bisa ditukar langsung di toko ya! Tunjukkan nama & nomor WA kamu ke penjual, lalu minta penukaran poin.</p>
+        <div class="points-redeem-note">⚠️ Penukaran <strong>hanya bisa di toko</strong>, tidak bisa via aplikasi.</div>
+      </div>
+
+      <!-- Tabel Cara Mendapat Poin -->
+      <div class="points-earn-card">
+        <div class="points-earn-title">💡 Cara Mendapat Poin</div>
+        <div class="points-earn-table">
+          <div class="earn-row earn-header">
+            <span>Nilai Belanja</span>
+            <span>Poin Didapat</span>
+          </div>
+          <div class="earn-row">
+            <span>Rp 10.000 – 15.000</span>
+            <span class="earn-pts">⭐ 1 Poin</span>
+          </div>
+          <div class="earn-row">
+            <span>Rp 16.000 – 25.000</span>
+            <span class="earn-pts">⭐⭐ 2 Poin</span>
+          </div>
+          <div class="earn-row">
+            <span>Rp 26.000 – 35.000</span>
+            <span class="earn-pts">⭐⭐⭐ 3 Poin</span>
+          </div>
+          <div class="earn-row">
+            <span>Rp 36.000 – 45.000</span>
+            <span class="earn-pts">⭐⭐⭐⭐ 4 Poin</span>
+          </div>
+          <div class="earn-row earn-more">
+            <span>Dan seterusnya...</span>
+            <span class="earn-pts">+1 Poin tiap Rp 10.000</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <nav class="bottom-bar">
+    <button class="bot-item active" id="bnMenu" onclick="goView('vMenu')">
+      <span>🍲</span>
+      <em>Menu</em>
+    </button>
+    <button class="bot-item" id="bnStatus" onclick="goView('vStatus')">
+      <span>📋</span>
+      <em>Pesanan</em>
+    </button>
+    <button class="bot-item" id="bnPoin" onclick="goView('vPoin')">
+      <span>⭐</span>
+      <em>Poin</em>
+    </button>
+    <button class="bot-item" onclick="doLogout()">
+      <span>🚪</span>
+      <em>Keluar</em>
+    </button>
+  </nav>
+</div>
+
+<!-- ==================== ADMIN PANEL ==================== -->
+<div id="adminPanel" class="page d-none">
+
+  <header class="app-bar app-bar-dark">
+    <div class="app-bar-inner">
+      <div class="app-brand">
+        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="bar-logo" />
+        <div>
+          <strong>Admin Panel</strong>
+          <span>Seblak Nyo-Nyor</span>
+        </div>
+      </div>
+      <div class="bar-actions">
+        <span id="newBadge" class="new-badge d-none">0 Baru</span>
+        <button class="icon-btn" onclick="doLogout()" aria-label="Logout">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="admin-wrap">
+
+    <!-- Store Control -->
+    <div class="store-card" id="storeCard">
+      <div class="store-row">
+        <div class="store-info">
+          <span id="storeEmoji">🟢</span>
+          <div>
+            <strong id="storeLbl">Toko Buka</strong>
+            <small id="storeRsnLbl"></small>
+          </div>
+        </div>
+        <button id="storeBtn" class="toggle-btn open-btn" onclick="toggleStore()">Tutup Toko</button>
+      </div>
+      <div id="rsnForm" class="rsn-form d-none">
+        <input type="text" id="rsnInp" placeholder="Alasan tutup toko..." />
+        <button onclick="saveReason()">Simpan</button>
+      </div>
+    </div>
+
+    <!-- Admin Tab Bar -->
+    <div class="admin-tab-bar">
+      <button class="admin-tab active" id="atOrders" onclick="switchAdminTab('orders',this)">📋 Pesanan</button>
+      <button class="admin-tab" id="atCustomers" onclick="switchAdminTab('customers',this)">⭐ Pelanggan</button>
+    </div>
+
+    <!-- Pesanan Tab -->
+    <div id="adminTabOrders">
+      <div class="filter-bar">
+        <button class="filter-btn active" onclick="adminFilter('Semua',this)">Semua</button>
+        <button class="filter-btn" onclick="adminFilter('Menunggu',this)">Menunggu</button>
+        <button class="filter-btn" onclick="adminFilter('Diproses',this)">Diproses</button>
+        <button class="filter-btn" onclick="adminFilter('Siap Diambil',this)">Siap Diambil</button>
+        <button class="filter-btn" onclick="adminFilter('Selesai',this)">Selesai</button>
+      </div>
+      <div id="adminOrders" class="admin-orders"></div>
+    </div>
+
+    <!-- Pelanggan Tab -->
+    <div id="adminTabCustomers" class="d-none">
+      <div class="customers-header">
+        <p class="customers-desc">Daftar pelanggan berdasarkan jumlah poin. Semakin besar poin = semakin sering beli!</p>
+      </div>
+      <div id="customerList" class="customer-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== MODALS ==================== -->
+
+<!-- Seblak Paketan -->
+<div id="mPaketan" class="overlay d-none" onclick="overlayClose(this,'mPaketan')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <h3>🍲 Seblak Paketan</h3>
+      <button onclick="closeModal('mPaketan')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <p class="sh-label">Pilih Harga Paket</p>
+      <div class="chip-grid" id="paketGrid">
+        <button class="price-chip" onclick="pickPaket(10000,this)">Rp 10.000</button>
+        <button class="price-chip" onclick="pickPaket(15000,this)">Rp 15.000</button>
+        <button class="price-chip" onclick="pickPaket(20000,this)">Rp 20.000</button>
+        <button class="price-chip" onclick="pickPaket(25000,this)">Rp 25.000</button>
+      </div>
+      <p class="sh-label mt-4">🌶️ Level Pedas</p>
+      <div class="spicy-row" id="paketSpicyRow">
+        <button class="spicy-btn" onclick="pickSpicy('p',0,this)">0<br><sub>No Spicy</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('p',1,this)">1<br><sub>🌶️</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('p',2,this)">2<br><sub>🌶️🌶️</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('p',3,this)">3<br><sub>🔥</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('p',4,this)">4<br><sub>🔥🔥</sub></button>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button id="paketAddBtn" class="btn-red btn-block" onclick="addPaket()" disabled>Tambah ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Seblak Custom -->
+<div id="mCustom" class="overlay d-none" onclick="overlayClose(this,'mCustom')">
+  <div class="sheet sheet-tall" onclick="event.stopPropagation()">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head sticky">
+      <h3>🌶️ Seblak Suka-Suka</h3>
+      <button onclick="closeModal('mCustom')">✕</button>
+    </div>
+    <div class="sheet-body sheet-scroll">
+      <p class="sh-label">🌶️ Level Pedas</p>
+      <div class="spicy-row" id="custSpicyRow">
+        <button class="spicy-btn" onclick="pickSpicy('c',0,this)">0<br><sub>No Spicy</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('c',1,this)">1<br><sub>🌶️</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('c',2,this)">2<br><sub>🌶️🌶️</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('c',3,this)">3<br><sub>🔥</sub></button>
+        <button class="spicy-btn" onclick="pickSpicy('c',4,this)">4<br><sub>🔥🔥</sub></button>
+      </div>
+      <div id="toppingArea"></div>
+    </div>
+    <div class="sheet-foot sticky-foot">
+      <div class="custom-total" id="custTotal">
+        <span>0 topping</span> <strong>Rp 0</strong>
+      </div>
+      <button id="custAddBtn" class="btn-red btn-block" onclick="addCustom()" disabled>Tambah ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Boba -->
+<div id="mBoba" class="overlay d-none" onclick="overlayClose(this,'mBoba')">
+  <div class="sheet sheet-tall" onclick="event.stopPropagation()">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head sticky">
+      <h3>🧋 Special Drink Boba</h3>
+      <button onclick="closeModal('mBoba')">✕</button>
+    </div>
+    <div class="sheet-body sheet-scroll">
+      <div id="bobaArea"></div>
+    </div>
+    <div class="sheet-foot sticky-foot">
+      <button id="bobaAddBtn" class="btn-red btn-block" onclick="addBoba()" disabled>Tambah ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Simple Menu (Bakso / Mie Ayam) -->
+<div id="mSimple" class="overlay d-none" onclick="overlayClose(this,'mSimple')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="sheet-grip"></div>
+    <div class="sheet-head">
+      <h3 id="simpleTitle">Menu</h3>
+      <button onclick="closeModal('mSimple')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <div class="simple-hero">
+        <div class="simple-icon" id="simpleIcon"></div>
+        <p id="simpleDesc"></p>
+        <div class="simple-harga" id="simpleHarga"></div>
+      </div>
+      <div class="qty-row">
+        <span>Jumlah</span>
+        <div class="qty-ctrl">
+          <button onclick="chgSimpleQty(-1)">−</button>
+          <span id="simpleQtyVal">1</span>
+          <button onclick="chgSimpleQty(1)">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="sheet-foot">
+      <button class="btn-red btn-block" onclick="addSimple()">Tambah ke Keranjang</button>
+    </div>
+  </div>
+</div>
+
+<!-- Cart Drawer -->
+<div id="cartOverlay" class="overlay d-none" onclick="closeCart()"></div>
+<aside id="cartDrawer" class="cart-drawer d-none">
+  <div class="cart-head">
+    <h3>🛒 Keranjang</h3>
+    <button onclick="closeCart()">✕</button>
+  </div>
+  <div id="cartBody" class="cart-body"></div>
+  <div id="cartFoot" class="cart-foot d-none">
+    <div class="pack-section">
+      <p class="sec-lbl">📦 Pilih Kemasan</p>
+      <div class="pack-opts">
+        <label class="pack-opt">
+          <input type="radio" name="pkg" value="plastic" checked onchange="recalcTotal()" />
+          <div class="pack-card">
+            <span>🛍️</span>
+            <div><strong>Bungkus Plastik</strong><small>Gratis</small></div>
+            <div class="pack-check">✓</div>
+          </div>
+        </label>
+        <label class="pack-opt">
+          <input type="radio" name="pkg" value="box" onchange="recalcTotal()" />
+          <div class="pack-card">
+            <span>📦</span>
+            <div><strong>Box Delivery</strong><small>+Rp 2.000</small></div>
+            <div class="pack-check">✓</div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="data-section">
+      <p class="sec-lbl">📝 Data Pemesan</p>
+      <div class="field">
+        <label>Nama</label>
+        <div class="inp-wrap"><span>👤</span><input type="text" id="coName" readonly /></div>
+      </div>
+      <div class="field">
+        <label>WhatsApp</label>
+        <div class="inp-wrap"><span>📱</span><input type="tel" id="coWa" readonly /></div>
+      </div>
+      <div class="field">
+        <label>Jam Ambil</label>
+        <div class="inp-wrap"><span>🕐</span><input type="time" id="coTime" /></div>
+      </div>
+    </div>
+    <div class="total-box">
+      <div class="total-row"><span>Subtotal</span><span id="tSubtotal">Rp 0</span></div>
+      <div class="total-row"><span>Kemasan</span><span id="tPack">Gratis</span></div>
+      <div class="total-row total-main"><strong>TOTAL</strong><strong id="tTotal">Rp 0</strong></div>
+      <div class="total-row points-preview-row"><span>🌟 Poin yang akan didapat</span><span id="tPoints" class="points-preview">+0 poin</span></div>
+    </div>
+    <div class="cod-box">💳 Bayar saat ambil (COD)</div>
+    <button class="btn-red btn-block btn-order" onclick="doOrder()">Pesan via WhatsApp 📲</button>
+  </div>
+</aside>
+
+<!-- Firebase SDK (Compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>
