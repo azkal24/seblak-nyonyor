@@ -265,6 +265,16 @@ function prosesTukarPoin() {
 }
 
 // ======================
+// LOGIKA TIER MEMBER
+// ======================
+function getTierInfo(pts) {
+  if (pts >= 101) return { name: "PLATINUM", class: "tier-platinum", next: null, target: 0, badge: "bdg-platinum" };
+  if (pts >= 51)  return { name: "GOLD", class: "tier-gold", next: "PLATINUM", target: 101, badge: "bdg-gold" };
+  if (pts >= 21)  return { name: "SILVER", class: "tier-silver", next: "GOLD", target: 51, badge: "bdg-silver" };
+  return { name: "CLASSIC", class: "tier-classic", next: "SILVER", target: 21, badge: "bdg-classic" };
+}
+
+// ======================
 // TAMPILAN CUSTOMER (CEK POIN & RIWAYAT)
 // ======================
 function listenCustomerPoints(wa) {
@@ -279,6 +289,13 @@ function listenCustomerPoints(wa) {
     var ordEl = document.getElementById("myTotalOrders");
     var histList = document.getElementById("historyList");
     
+    // UPDATE TIER UI
+    var tier = getTierInfo(pts);
+    var cardEl = document.getElementById("memberCard");
+    var badgeEl = document.getElementById("tierBadge");
+    var progressEl = document.getElementById("tierProgress");
+    var msgEl = document.getElementById("tierMsg");
+    
     if (ptEl)  ptEl.textContent  = pts;
     if (ordEl) ordEl.textContent = total;
     if (subEl) {
@@ -288,6 +305,22 @@ function listenCustomerPoints(wa) {
       else               subEl.textContent = "Luar biasa! " + pts + " poin — VIP Nyo-Nyor! 🌶️👑";
     }
 
+    if (cardEl) cardEl.className = "points-hero-card " + tier.class;
+    if (badgeEl) badgeEl.innerHTML = "🏆 TIER: " + tier.name;
+    
+    if (progressEl && msgEl) {
+      if (tier.next) {
+        var prevTarget = tier.name === "CLASSIC" ? 0 : (tier.name === "SILVER" ? 21 : 51);
+        var progress = ((pts - prevTarget) / (tier.target - prevTarget)) * 100;
+        progressEl.style.width = progress + "%";
+        msgEl.innerHTML = "Butuh <b>" + (tier.target - pts) + " Poin</b> untuk naik ke " + tier.next;
+      } else {
+        progressEl.style.width = "100%";
+        msgEl.innerHTML = "👑 Kamu adalah Pelanggan Sultan Tertinggi!";
+      }
+    }
+
+    // UPDATE HISTORY
     if (histList) {
       var historyData = data.history || {};
       var historyArray = Object.values(historyData).sort(function(a,b) { return b.date - a.date; }); 
@@ -345,8 +378,9 @@ function renderCustomerList() {
 
   var MEDALS = ["🥇","🥈","🥉"];
   container.innerHTML = allCustomers.map(function(c, idx) {
-    var medal   = idx < 3 ? MEDALS[idx] : (idx + 1) + ".";
     var pts     = c.totalPoints  || 0;
+    var tier    = getTierInfo(pts); // Get Tier
+    var medal   = idx < 3 ? MEDALS[idx] : (idx + 1) + ".";
     var orders  = c.totalOrders  || 0;
     var lastDt  = c.lastOrder ? new Date(c.lastOrder).toLocaleDateString("id-ID") : "-";
     var barW    = allCustomers[0] && allCustomers[0].totalPoints ? Math.round((pts / allCustomers[0].totalPoints) * 100) : 100;
@@ -354,7 +388,8 @@ function renderCustomerList() {
     return '<div class="customer-card' + (idx < 3 ? " top-customer" : "") + '">' +
       '<div class="customer-rank">' + medal + '</div>' +
       '<div class="customer-info">' +
-        '<div class="customer-name">' + (c.name || "—") + '</div>' +
+        // TAMPILIN BADGE TIER DI ADMIN
+        '<div class="customer-name">' + (c.name || "—") + ' <span class="badge-tier ' + tier.badge + '">' + tier.name + '</span></div>' +
         '<div class="customer-wa">📱 ' + c.wa + '</div>' +
         '<div class="customer-meta">🛒 ' + orders + ' jajan · 📅 Terakhir: ' + lastDt + '</div>' +
         '<div class="customer-bar-wrap"><div class="customer-bar" style="width:' + barW + '%"></div></div>' +
@@ -384,4 +419,4 @@ function showToast(msg, type) {
     el.style.animation = "toastOut .3s ease forwards";
     setTimeout(function(){ if(el.parentNode) el.remove(); }, 300);
   }, 3200);
-     }
+   }
