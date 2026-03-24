@@ -281,6 +281,56 @@ function renderCustomerList() {
   }).join("");
 }
 
+// ===== SISTEM TUKAR / POTONG POIN =====
+function prosesTukarPoin() {
+  var waRaw  = document.getElementById("redeemWa").value.trim();
+  var ptsVal = document.getElementById("redeemPts").value.trim();
+
+  if (!db) { showToast("Firebase belum terkoneksi!", "error"); return; }
+  if (!waRaw) { showToast("Nomor WA wajib diisi!", "warning"); return; }
+  if (!ptsVal) { showToast("Jumlah poin yang mau dipotong wajib diisi!", "warning"); return; }
+
+  var wa = cleanWa(waRaw);
+  var ptsToDeduct = parseInt(ptsVal, 10);
+
+  if (ptsToDeduct <= 0) {
+    showToast("Jumlah poin harus lebih dari 0!", "warning"); 
+    return;
+  }
+
+  // Cek dulu poin pelanggan di database
+  var ref = db.ref("customers/" + wa);
+  ref.once("value", function(snap) {
+    var data = snap.val();
+    
+    // Kalau WA belum pernah belanja / gak ada di database
+    if (!data) {
+      showToast("Gagal! Pelanggan dengan WA tersebut tidak ditemukan.", "error");
+      return;
+    }
+    
+    var currentPts = data.totalPoints || 0;
+    
+    // Kalau poinnya kurang dari yang mau dituker
+    if (currentPts < ptsToDeduct) {
+      showToast("Gagal! Poin tidak cukup. Poin pelanggan cuma sisa " + currentPts + " ⭐", "error");
+      return;
+    }
+
+    // Kalau poin cukup, potong poinnya
+    ref.update({
+      totalPoints: currentPts - ptsToDeduct
+    }).then(function() {
+      showToast("Berhasil! " + ptsToDeduct + " poin dipotong dari " + (data.name || wa), "success");
+      // Kosongin form lagi
+      document.getElementById("redeemWa").value = "";
+      document.getElementById("redeemPts").value = "";
+    }).catch(function(err) {
+      showToast("Waduh, gagal memotong poin dari server!", "error");
+    });
+  });
+}
+
 // ===== HELPERS =====
 function fmtRp(n) { return Number(n).toLocaleString("id-ID"); }
 
@@ -303,4 +353,4 @@ function showToast(msg, type) {
     el.style.animation = "toastOut .3s ease forwards";
     setTimeout(function(){ if(el.parentNode) el.remove(); }, 300);
   }, 3200);
-}
+  }
