@@ -75,7 +75,13 @@ function doLoginCustomer() {
   showPage("custApp");
 
   if (db) {
-    listenCustomerPoints(cleanWa(wa));
+    var waClean = cleanWa(wa);
+    // UPDATE: Simpan/Timpa nama "Pelanggan VIP" jadi nama asli saat login
+    db.ref("customers/" + waClean).update({
+      name: name,
+      wa: waClean
+    });
+    listenCustomerPoints(waClean);
   }
   showToast("Selamat datang, " + name + "! 🎉", "success");
 }
@@ -297,4 +303,4 @@ function showToast(msg, type) {
     el.style.animation = "toastOut .3s ease forwards";
     setTimeout(function(){ if(el.parentNode) el.remove(); }, 300);
   }, 3200);
-     }
+}
