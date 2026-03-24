@@ -217,7 +217,30 @@
 
         <button class="btn-red btn-block" onclick="prosesKasir()" style="margin-top: 25px;">Kirim Poin ⭐</button>
       </div>
-    </div>
+
+      <div class="form-pane" style="background:#fff; padding:20px; border-radius:16px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #ffe4e6;">
+        <h3 style="margin-top:0; color:#e11d48; font-size:16px;">🎁 Tukar Poin (Potong Poin)</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Gunakan form ini untuk <b>mengurangi poin</b> saat pelanggan menukarkan poinnya dengan bonus/diskon.</p>
+        
+        <div class="field">
+          <label>Nomor WA Pelanggan</label>
+          <div class="inp-wrap">
+            <span>📱</span>
+            <input type="tel" id="redeemWa" placeholder="Contoh: 081234567890" autocomplete="off" />
+          </div>
+        </div>
+        
+        <div class="field">
+          <label>Jumlah Poin Dipotong</label>
+          <div class="inp-wrap">
+            <span>⭐</span>
+            <input type="number" id="redeemPts" placeholder="Contoh: 10" min="1" autocomplete="off" />
+          </div>
+        </div>
+
+        <button class="btn-dark btn-block" onclick="prosesTukarPoin()" style="margin-top: 15px;">Potong Poin ⭐</button>
+      </div>
+      </div>
 
     <div id="adminTabCustomers" class="d-none">
       <div class="customers-header">
@@ -231,6 +254,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="./public/app.js?v=2"></script>
+<script src="./public/kasir.js?v=3"></script>
 </body>
-</html>
+      </html>
