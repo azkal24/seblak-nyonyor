@@ -10,7 +10,62 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./public/style.css" />
-</head>
+
+  <style>
+    /* Bikin Kartu Poin Jadi Kayak Kartu VIP Glow in the dark */
+    .points-hero-card {
+      background: linear-gradient(135deg, #1e1e2f, #3a0ca3);
+      color: white;
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: 0 10px 30px rgba(114, 9, 183, 0.4);
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+    }
+    .points-hero-card::before {
+      content: '';
+      position: absolute;
+      top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      transform: rotate(30deg);
+    }
+    .points-hero-val {
+      font-size: 3rem;
+      text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+      background: -webkit-linear-gradient(#feca57, #ff9f43);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .points-hero-sub, .points-hero-orders { color: #d1d5db; }
+    
+    /* Tombol makin pop up pas disentuh */
+    button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+    button:active { transform: scale(0.95); }
+    .btn-red { box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3); }
+    
+    /* Desain Riwayat Transaksi (Timeline) */
+    .hist-sect { margin-top: 25px; }
+    .hist-sect h3 { font-size: 16px; margin-bottom: 15px; color: #1f2937; }
+    .hist-list { display: flex; flex-direction: column; gap: 12px; }
+    .hist-card {
+      background: #fff; border-radius: 12px; padding: 15px;
+      display: flex; align-items: center; justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 5px solid #e5e7eb;
+    }
+    .hist-card.earn { border-left-color: #10b981; } /* Hijau buat dapet poin */
+    .hist-card.redeem { border-left-color: #e11d48; } /* Merah buat tuker poin */
+    .hist-icon { font-size: 24px; margin-right: 12px; }
+    .hist-info { flex: 1; }
+    .hist-title { font-weight: 700; font-size: 14px; color: #111827; }
+    .hist-date { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .hist-pts { font-weight: 800; font-size: 16px; }
+    .hist-pts.earn { color: #10b981; }
+    .hist-pts.redeem { color: #e11d48; }
+    
+    /* Empty State Riwayat */
+    .hist-empty { text-align: center; padding: 20px; color: #9ca3af; font-size: 13px; background: #f9fafb; border-radius: 12px; }
+  </style>
+  </head>
 <body>
 
 <div id="splashScreen" class="splash">
@@ -20,7 +75,7 @@
       <div class="splash-ring"></div>
     </div>
     <h1 class="splash-brand">Seblak Nyo-Nyor</h1>
-    <p class="splash-tag">🌶️ VIP Member Apps</p>
+    <p class="splash-tag">🌶️ Member Card & Poin</p>
     <div class="splash-loader"><div></div><div></div><div></div></div>
   </div>
 </div>
@@ -28,28 +83,40 @@
 <div id="toastBox" class="toast-box"></div>
 
 <div id="loginPage" class="page d-none">
-  <div class="login-bg"></div>
+  <div class="login-bg">
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+    <div class="blob b3"></div>
+  </div>
   <div class="login-wrap">
     <div class="login-hero">
-      <div class="hero-logo-ring"><img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="hero-logo" /></div>
+      <div class="hero-logo-ring">
+        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo Seblak Nyo-Nyor" class="hero-logo" />
+      </div>
       <h1>Seblak Nyo-Nyor</h1>
-      <p>Kumpulin Poinnya, Nikmati Pedasnya!</p>
+      <p>🌶️ Kumpulin Poinnya, Nikmati Pedasnya!</p>
     </div>
 
     <div class="login-card">
       <div class="tab-bar">
         <button class="tab active" id="tabCust" onclick="switchTab('cust')">⭐ Pelanggan</button>
-        <button class="tab" id="tabAdmin" onclick="switchTab('admin')">🔐 Kasir</button>
+        <button class="tab" id="tabAdmin" onclick="switchTab('admin')">🔐 Kasir / Admin</button>
       </div>
 
       <div id="formCust" class="form-pane">
         <div class="field">
           <label>Nama Lengkap</label>
-          <div class="inp-wrap"><span>👤</span><input type="text" id="inpName" placeholder="Masukkan nama kamu" autocomplete="name" /></div>
+          <div class="inp-wrap">
+            <span>👤</span>
+            <input type="text" id="inpName" placeholder="Masukkan nama kamu" autocomplete="name" />
+          </div>
         </div>
         <div class="field">
           <label>Nomor WhatsApp</label>
-          <div class="inp-wrap"><span>📱</span><input type="tel" id="inpWa" placeholder="Contoh: 081234567890" autocomplete="tel" /></div>
+          <div class="inp-wrap">
+            <span>📱</span>
+            <input type="tel" id="inpWa" placeholder="Contoh: 081234567890" autocomplete="tel" />
+          </div>
         </div>
         <button class="btn-red btn-block" onclick="doLoginCustomer()">Cek Poin Saya ⭐</button>
       </div>
@@ -57,22 +124,28 @@
       <div id="formAdmin" class="form-pane d-none">
         <div class="field">
           <label>PIN Admin</label>
-          <div class="inp-wrap"><span>🔑</span><input type="password" id="inpPin" placeholder="••••••" maxlength="8" class="pin-field" /></div>
+          <div class="inp-wrap">
+            <span>🔑</span>
+            <input type="password" id="inpPin" placeholder="••••••" maxlength="8" class="pin-field" />
+          </div>
+          <p id="pinErr" class="err-msg d-none">PIN salah, coba lagi! ❌</p>
         </div>
         <button class="btn-dark btn-block" onclick="doLoginAdmin()">Masuk Kasir 🔐</button>
       </div>
     </div>
-    <p class="login-foot">© 2026 Seblak Nyo-Nyor</p>
+
+    <p class="login-foot">© 2025 Seblak Nyo-Nyor</p>
   </div>
 </div>
 
 <div id="custApp" class="page d-none">
+
   <header class="app-bar" id="appBar">
     <div class="app-bar-inner">
       <div class="app-brand">
         <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="bar-logo" />
         <div>
-          <strong>VIP Nyo-Nyor</strong>
+          <strong>Member Nyo-Nyor</strong>
           <span id="greetUser">Halo!</span>
         </div>
       </div>
@@ -80,47 +153,53 @@
   </header>
 
   <main class="app-main">
+
     <div id="vPoin" class="view show">
       <div class="section-head">
-        <h2>Kartu Member ⭐</h2>
-        <p>Jajan terus biar level kamu makin Sultan!</p>
+        <h2>Poin Saya ⭐</h2>
+        <p>Kumpulkan poin dari setiap porsi seblakmu!</p>
       </div>
 
-      <div class="points-hero-card tier-classic" id="memberCard">
-        <div class="tier-badge" id="tierBadge">🏆 TIER: CLASSIC</div>
+      <div class="points-hero-card">
         <div class="points-hero-top">
-          <div class="points-star-icon">💎</div>
+          <div class="points-star-icon">⭐</div>
           <div class="points-hero-info">
-            <div class="points-hero-label">Total Poin Terkumpul</div>
+            <div class="points-hero-label">Total Poin Kamu</div>
             <div class="points-hero-val" id="myPointsVal">0</div>
           </div>
         </div>
         <div class="points-hero-sub" id="myPointsSub">Belum ada poin. Yuk jajan ke toko!</div>
-        <div style="background: rgba(0,0,0,0.2); border-radius: 99px; height: 6px; margin-bottom: 8px; overflow: hidden;">
-           <div id="tierProgress" style="width: 0%; background: #fff; height: 100%; border-radius: 99px; transition: width 0.5s ease;"></div>
-        </div>
-        <div style="font-size: 11px; font-weight: 600; opacity: 0.9;" id="tierMsg">Butuh 21 Poin untuk naik ke SILVER</div>
+        <div class="points-hero-orders">🛒 Total Jajan: <strong id="myTotalOrders">0</strong> kali</div>
       </div>
 
       <div class="hist-sect">
         <h3>📜 Riwayat Terakhir</h3>
-        <div id="historyList" class="hist-list"></div>
+        <div id="historyList" class="hist-list">
+          </div>
       </div>
-      
       <div class="points-redeem-card mt-4">
-        <div class="points-redeem-title">🏪 Info Penukaran</div>
-        <p class="points-redeem-desc">Tunjukkan Kartu Member di HP kamu ke kasir untuk menukar Poin dengan topping atau porsi gratis!</p>
+        <div class="points-redeem-title">🏪 Cara Menukar Poin</div>
+        <p class="points-redeem-desc">Poin ditambahkan otomatis oleh kasir. Poin bisa ditukar dengan topping gratis atau diskon saat jajan langsung di toko!</p>
       </div>
+
     </div>
+
   </main>
 
   <nav class="bottom-bar" style="justify-content: space-evenly;">
-    <button class="bot-item active" id="bnPoin"><span>⭐</span><em>Member</em></button>
-    <button class="bot-item" onclick="doLogout()"><span>🚪</span><em>Keluar</em></button>
+    <button class="bot-item active" id="bnPoin">
+      <span>⭐</span>
+      <em>Poin Member</em>
+    </button>
+    <button class="bot-item" onclick="doLogout()">
+      <span>🚪</span>
+      <em>Keluar Aplikasi</em>
+    </button>
   </nav>
 </div>
 
 <div id="adminPanel" class="page d-none">
+
   <header class="app-bar app-bar-dark">
     <div class="app-bar-inner">
       <div class="app-brand">
@@ -131,44 +210,89 @@
         </div>
       </div>
       <div class="bar-actions">
-        <button class="icon-btn" onclick="doLogout()">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <button class="icon-btn" onclick="doLogout()" aria-label="Logout">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
         </button>
       </div>
     </div>
   </header>
 
   <div class="admin-wrap">
+
     <div class="admin-tab-bar">
-      <button class="admin-tab active" onclick="switchAdminTab('kasir',this)">💰 Kasir</button>
-      <button class="admin-tab" onclick="switchAdminTab('customers',this)">⭐ Member</button>
+      <button class="admin-tab active" id="atKasir" onclick="switchAdminTab('kasir',this)">💰 Input Kasir</button>
+      <button class="admin-tab" id="atCustomers" onclick="switchAdminTab('customers',this)">⭐ Data Member</button>
     </div>
 
     <div id="adminTabKasir">
-      <div class="form-pane-glass">
-        <h3 style="margin-top:0; color:var(--gray-900); font-size:16px; margin-bottom: 16px;">➕ Tambah Poin</h3>
-        <div class="field"><label>WhatsApp</label><div class="inp-wrap"><span>📱</span><input type="tel" id="kasirWa" placeholder="08..." autocomplete="off"/></div></div>
-        <div class="field"><label>Total Belanja (Rp)</label><div class="inp-wrap"><span>💰</span><input type="number" id="kasirTotal" placeholder="16500" step="500" autocomplete="off"/></div></div>
-        <button class="btn-red btn-block" onclick="prosesKasir()">Kirim Poin ⭐</button>
+      <div class="customers-header">
+        <p class="customers-desc">Masukkan nomor WA pelanggan dan nominal total belanja. Sistem akan otomatis menghitung dan mengirim poin.</p>
+      </div>
+      
+      <div class="form-pane" style="background:#fff; padding:20px; border-radius:16px; margin-top:15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        <div class="field">
+          <label>Nomor WA Pelanggan</label>
+          <div class="inp-wrap">
+            <span>📱</span>
+            <input type="tel" id="kasirWa" placeholder="Contoh: 081234567890" autocomplete="off" />
+          </div>
+        </div>
+        
+        <div class="field">
+          <label>Total Belanja (Rp)</label>
+          <div class="inp-wrap">
+            <span>💰</span>
+            <input type="number" id="kasirTotal" placeholder="Contoh: 16500" step="500" autocomplete="off" />
+          </div>
+        </div>
+
+        <button class="btn-red btn-block" onclick="prosesKasir()" style="margin-top: 25px;">Kirim Poin ⭐</button>
       </div>
 
-      <div class="form-pane-glass" style="border: 2px solid var(--red-light);">
-        <h3 style="margin-top:0; color:var(--red); font-size:16px; margin-bottom: 16px;">🎁 Potong Poin</h3>
-        <div class="field"><label>WhatsApp</label><div class="inp-wrap"><span>📱</span><input type="tel" id="redeemWa" placeholder="08..." autocomplete="off"/></div></div>
-        <div class="field"><label>Poin Dipotong</label><div class="inp-wrap"><span>⭐</span><input type="number" id="redeemPts" placeholder="10" min="1" autocomplete="off"/></div></div>
-        <div class="field"><label>Ditukar dengan</label><div class="inp-wrap"><span>🍜</span><input type="text" id="redeemItem" placeholder="Es Teh" autocomplete="off"/></div></div>
-        <button class="btn-dark btn-block" onclick="prosesTukarPoin()">Potong Poin ⭐</button>
+      <div class="form-pane" style="background:#fff; padding:20px; border-radius:16px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #ffe4e6;">
+        <h3 style="margin-top:0; color:#e11d48; font-size:16px;">🎁 Tukar Poin (Potong Poin)</h3>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Gunakan form ini untuk <b>mengurangi poin</b> saat pelanggan menukarkan poinnya.</p>
+        
+        <div class="field">
+          <label>Nomor WA Pelanggan</label>
+          <div class="inp-wrap">
+            <span>📱</span>
+            <input type="tel" id="redeemWa" placeholder="Contoh: 081234567890" autocomplete="off" />
+          </div>
+        </div>
+        
+        <div class="field">
+          <label>Jumlah Poin Dipotong</label>
+          <div class="inp-wrap">
+            <span>⭐</span>
+            <input type="number" id="redeemPts" placeholder="Contoh: 10" min="1" autocomplete="off" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Ditukar dengan apa?</label>
+          <div class="inp-wrap">
+            <span>🍜</span>
+            <input type="text" id="redeemItem" placeholder="Contoh: 1 Gelas Es Teh" autocomplete="off" />
+          </div>
+        </div>
+
+        <button class="btn-dark btn-block" onclick="prosesTukarPoin()" style="margin-top: 15px;">Potong Poin ⭐</button>
       </div>
     </div>
 
     <div id="adminTabCustomers" class="d-none">
+      <div class="customers-header">
+        <p class="customers-desc">Daftar pelanggan berdasarkan jumlah poin. Semakin besar poin = semakin sering jajan!</p>
+      </div>
       <div id="customerList" class="customer-list"></div>
     </div>
+
   </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="./public/kasir.js?v=7"></script>
+<script src="./public/kasir.js?v=6"></script>
 </body>
 </html>
