@@ -80,7 +80,7 @@ function doLoginCustomer() {
         
         // PENGAMAN: Cek apakah nama yang diketik SAMA dengan yang ada di database (abaikan huruf besar/kecil)
         if (inputName.toLowerCase() !== data.name.toLowerCase()) {
-          showToast("❌ Gagal masuk! Nama dan Nomor WA tidak cocok.", "error");
+          showToast("Gagal masuk! Nama dan Nomor WA tidak cocok.", "error");
           return; // Stop proses login disini
         }
         
