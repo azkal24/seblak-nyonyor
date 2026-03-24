@@ -139,7 +139,6 @@ function prosesKasir() {
 
   if (pts === 0) {
     showToast("Transaksi Rp " + fmtRp(total) + " sukses, tapi belum dapat poin.", "info");
-    // Tetap kirim riwayat belanjanya
     db.ref("customers/" + wa + "/history").push({
       type: "earn", spend: total, pts: 0, date: Date.now()
     });
@@ -152,18 +151,28 @@ function prosesKasir() {
     if (!current) {
       return { name: "Pelanggan VIP", wa: wa, totalPoints: pts, totalOrders: 1, lastOrder: Date.now() };
     }
-    return {
+    
+    // FIX: Cegah error undefined dari Firebase
+    var newData = {
       name       : current.name || "Pelanggan VIP",
       wa         : wa,
       totalPoints: (current.totalPoints || 0) + pts,
       totalOrders: (current.totalOrders || 0) + 1,
-      lastOrder  : Date.now(),
-      history    : current.history // jaga data history lama biar gak hilang
+      lastOrder  : Date.now()
     };
+    
+    if (current.history) {
+      newData.history = current.history; // Masukin history lama cuma kalau emang ada isinya
+    }
+    
+    return newData;
+
   }, function(error, committed) {
-    if (error) { showToast("Gagal mengirim poin!", "error"); } 
+    if (error) { 
+      console.error(error);
+      showToast("Gagal mengirim poin!", "error"); 
+    } 
     else if (committed) {
-      // PUSH RIWAYAT HISTORY KE SERVER
       db.ref("customers/" + wa + "/history").push({
         type: "earn",
         spend: total,
@@ -214,7 +223,6 @@ function prosesTukarPoin() {
     ref.update({
       totalPoints: currentPts - ptsToDeduct
     }).then(function() {
-      // PUSH RIWAYAT TUKAR KE SERVER
       db.ref("customers/" + wa + "/history").push({
         type: "redeem",
         pts: ptsToDeduct,
@@ -253,15 +261,14 @@ function listenCustomerPoints(wa) {
       else               subEl.textContent = "Luar biasa! " + pts + " poin — VIP Nyo-Nyor! 🌶️👑";
     }
 
-    // RENDER RIWAYAT TRANSAKSI
     if (histList) {
       var historyData = data.history || {};
-      var historyArray = Object.values(historyData).sort(function(a,b) { return b.date - a.date; }); // Urutkan dari terbaru
+      var historyArray = Object.values(historyData).sort(function(a,b) { return b.date - a.date; }); 
 
       if (historyArray.length === 0) {
         histList.innerHTML = '<div class="hist-empty">Belum ada riwayat transaksi.</div>';
       } else {
-        histList.innerHTML = historyArray.slice(0, 10).map(function(h) { // Tampilkan 10 terakhir aja
+        histList.innerHTML = historyArray.slice(0, 10).map(function(h) { 
           var isEarn = h.type === "earn";
           var dateStr = new Date(h.date).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
           
