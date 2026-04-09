@@ -70,30 +70,23 @@ function doLoginCustomer() {
     var waClean = cleanWa(wa);
     var ref = db.ref("customers/" + waClean);
     
-    // Kita suruh sistem ngecek database dulu sebelum masuk
     ref.once("value", function(snap) {
       var data = snap.val();
-      var finalName = inputName; // Default-nya pake nama yang diketik
+      var finalName = inputName;
       
-      // Kalau nomor WA udah terdaftar DAN namanya bukan "Pelanggan VIP"
       if (data && data.name && data.name !== "Pelanggan VIP") {
-        
-        // PENGAMAN: Cek apakah nama yang diketik SAMA dengan yang ada di database (abaikan huruf besar/kecil)
         if (inputName.toLowerCase() !== data.name.toLowerCase()) {
           showToast("Gagal masuk! Nama dan Nomor WA tidak cocok.", "error");
-          return; // Stop proses login disini
+          return;
         }
-        
-        finalName = data.name; // Pake nama asli dari database
+        finalName = data.name;
       } else {
-        // Kalau masih "Pelanggan VIP" atau data baru, simpan/timpa nama baru
         ref.update({
           name: inputName,
           wa: waClean
         });
       }
 
-      // Kalau lolos pengecekan, Masuk ke halaman aplikasi
       currentUser = { name: finalName, wa: waClean };
       isAdmin = false;
       document.getElementById("greetUser").textContent = "Halo, " + finalName + "! 👋";
@@ -176,21 +169,22 @@ function prosesKasir() {
   var ref = db.ref("customers/" + wa);
   ref.transaction(function(current) {
     if (!current) {
-      return { name: "Pelanggan VIP", wa: wa, totalPoints: pts, totalOrders: 1, lastOrder: Date.now() };
+      return { name: "Pelanggan VIP", wa: wa, currentPoints: pts, totalPoints: pts, totalOrders: 1, lastOrder: Date.now() };
     }
     
-    // FIX: Cegah error undefined dari Firebase
     var newData = {
-      name       : current.name || "Pelanggan VIP",
-      wa         : wa,
-      totalPoints: (current.totalPoints || 0) + pts,
-      totalOrders: (current.totalOrders || 0) + 1,
-      lastOrder  : Date.now()
+      name          : current.name || "Pelanggan VIP",
+      wa            : wa,
+      currentPoints : (current.currentPoints || 0) + pts,
+      totalPoints   : (current.totalPoints   || 0) + pts,
+      totalOrders   : (current.totalOrders   || 0) + 1,
+      lastOrder     : Date.now()
     };
     
-    if (current.history) {
-      newData.history = current.history; // Masukin history lama cuma kalau emang ada isinya
-    }
+    if (current.history)        newData.history        = current.history;
+    if (current.claimedSilver)  newData.claimedSilver  = true;
+    if (current.claimedPlatinum)newData.claimedPlatinum= true;
+    if (current.claimedGold)    newData.claimedGold    = true;
     
     return newData;
 
@@ -224,7 +218,7 @@ function calcPoints(total) {
 }
 
 // ======================
-// PROSES TUKAR POIN (POTONG)
+// PROSES TUKAR POIN ADMIN — potong currentPoints saja
 // ======================
 function prosesTukarPoin() {
   var waRaw  = document.getElementById("redeemWa").value.trim();
@@ -244,11 +238,11 @@ function prosesTukarPoin() {
     var data = snap.val();
     if (!data) { showToast("Pelanggan tidak ditemukan.", "error"); return; }
     
-    var currentPts = data.totalPoints || 0;
+    var currentPts = data.currentPoints || 0;
     if (currentPts < ptsToDeduct) { showToast("Gagal! Poin tidak cukup (Sisa: " + currentPts + " ⭐)", "error"); return; }
 
     ref.update({
-      totalPoints: currentPts - ptsToDeduct
+      currentPoints: currentPts - ptsToDeduct
     }).then(function() {
       db.ref("customers/" + wa + "/history").push({
         type: "redeem",
@@ -265,13 +259,156 @@ function prosesTukarPoin() {
 }
 
 // ======================
-// LOGIKA TIER MEMBER
+// KLAIM HADIAH KECIL (20pt / 35pt)
+// Potong currentPoints saja, totalPoints TIDAK berubah
 // ======================
-function getTierInfo(pts) {
-  if (pts >= 101) return { name: "PLATINUM", class: "tier-platinum", next: null, target: 0, badge: "bdg-platinum" };
-  if (pts >= 51)  return { name: "GOLD", class: "tier-gold", next: "PLATINUM", target: 101, badge: "bdg-gold" };
-  if (pts >= 21)  return { name: "SILVER", class: "tier-silver", next: "GOLD", target: 51, badge: "bdg-silver" };
-  return { name: "CLASSIC", class: "tier-classic", next: "SILVER", target: 21, badge: "bdg-classic" };
+function klaimHadiahKecil(pts, itemName) {
+  if (!currentUser || !db) { showToast("Kamu harus login dulu!", "error"); return; }
+  var wa = currentUser.wa;
+  var ref = db.ref("customers/" + wa);
+
+  ref.once("value", function(snap) {
+    var data = snap.val();
+    if (!data) { showToast("Data tidak ditemukan!", "error"); return; }
+    var currPts = data.currentPoints || 0;
+    if (currPts < pts) {
+      showToast("Poin belum cukup! Butuh " + pts + " poin, kamu punya " + currPts + " poin.", "error");
+      return;
+    }
+    ref.update({ currentPoints: currPts - pts }).then(function() {
+      db.ref("customers/" + wa + "/history").push({
+        type: "redeem", pts: pts, item: itemName, date: Date.now()
+      });
+      showToast("🎉 Yeay! Kamu klaim " + itemName + "! -" + pts + " Poin. Tunjukkan ke kasir!", "success");
+    }).catch(function() {
+      showToast("Gagal klaim hadiah, coba lagi!", "error");
+    });
+  });
+}
+
+// ======================
+// KLAIM HADIAH TIER (Silver / Platinum / Gold)
+// Silver & Platinum: hanya mark claimed, totalPoints TIDAK berubah
+// Gold: mark + RESET semua (1 siklus selesai)
+// ======================
+function klaimTier(tier) {
+  if (!currentUser || !db) { showToast("Kamu harus login dulu!", "error"); return; }
+  var wa = currentUser.wa;
+  var ref = db.ref("customers/" + wa);
+
+  var tierConfig = {
+    silver   : { minPts: 150, field: "claimedSilver",   prize: "2 Porsi Seblak Paketan 15k" },
+    platinum : { minPts: 225, field: "claimedPlatinum", prize: "2 Porsi Seblak Paketan 20k" },
+    gold     : { minPts: 350, field: "claimedGold",     prize: "THR Ramadhan" }
+  };
+  var cfg = tierConfig[tier];
+  if (!cfg) return;
+
+  ref.once("value", function(snap) {
+    var data = snap.val();
+    if (!data) { showToast("Data tidak ditemukan!", "error"); return; }
+
+    var totalPts = data.totalPoints || 0;
+    if (totalPts < cfg.minPts) { showToast("Total poin belum cukup! Butuh " + cfg.minPts + " total poin.", "error"); return; }
+    if (data[cfg.field]) { showToast("Kamu sudah pernah klaim hadiah " + tier.toUpperCase() + "!", "warning"); return; }
+    if (tier === "gold" && !isRamadhan()) { showToast("Hadiah Gold hanya bisa diklaim saat Ramadhan! 🌙", "warning"); return; }
+
+    var updates = {};
+    updates[cfg.field] = true;
+
+    if (tier === "gold") {
+      updates.totalPoints      = 0;
+      updates.claimedSilver    = false;
+      updates.claimedPlatinum  = false;
+      updates.claimedGold      = false;
+    }
+
+    ref.update(updates).then(function() {
+      db.ref("customers/" + wa + "/history").push({
+        type: "redeem", pts: cfg.minPts,
+        item: "Hadiah Tier " + tier.toUpperCase() + ": " + cfg.prize,
+        date: Date.now()
+      });
+      if (tier === "gold") {
+        showToast("🎊 Selamat! THR Ramadhan diklaim! Total poin di-reset untuk siklus baru.", "success");
+      } else {
+        showToast("🎉 Selamat! Kamu klaim " + cfg.prize + "! 🍜 Tunjukkan ke kasir ya!", "success");
+      }
+    }).catch(function() {
+      showToast("Gagal klaim hadiah tier, coba lagi!", "error");
+    });
+  });
+}
+
+// ======================
+// CEK BULAN RAMADHAN
+// ======================
+function isRamadhan() {
+  var now = new Date();
+  var ramadhanDates = [
+    { start: new Date(2025,  2,  1), end: new Date(2025,  2, 30) },
+    { start: new Date(2026,  1, 18), end: new Date(2026,  2, 19) },
+    { start: new Date(2027,  1,  7), end: new Date(2027,  2,  8) },
+    { start: new Date(2028,  0, 27), end: new Date(2028,  1, 25) }
+  ];
+  return ramadhanDates.some(function(r) { return now >= r.start && now <= r.end; });
+}
+
+// ======================
+// UPDATE STATUS TOMBOL KLAIM
+// ======================
+function updateClaimButtons(currPts, totalPts, data) {
+  var btn20   = document.getElementById("btnKlaim20");
+  var btn35   = document.getElementById("btnKlaim35");
+  var btnS    = document.getElementById("btnKlaimSilver");
+  var btnP    = document.getElementById("btnKlaimPlatinum");
+  var btnG    = document.getElementById("btnKlaimGold");
+  var cardS   = document.getElementById("cardSilver");
+  var cardP   = document.getElementById("cardPlatinum");
+  var cardG   = document.getElementById("cardGold");
+  var ramadhan = isRamadhan();
+
+  if (btn20) btn20.disabled = currPts < 20;
+  if (btn35) btn35.disabled = currPts < 35;
+
+  if (btnS) {
+    btnS.disabled    = totalPts < 150 || !!data.claimedSilver;
+    btnS.textContent = data.claimedSilver ? "✅ Diklaim" : "Klaim";
+  }
+  if (cardS) {
+    cardS.classList.toggle("tier-claim-unlocked", totalPts >= 150);
+    cardS.classList.toggle("tier-claim-done", !!data.claimedSilver);
+  }
+
+  if (btnP) {
+    btnP.disabled    = totalPts < 225 || !!data.claimedPlatinum;
+    btnP.textContent = data.claimedPlatinum ? "✅ Diklaim" : "Klaim";
+  }
+  if (cardP) {
+    cardP.classList.toggle("tier-claim-unlocked", totalPts >= 225);
+    cardP.classList.toggle("tier-claim-done", !!data.claimedPlatinum);
+  }
+
+  if (btnG) {
+    btnG.disabled = totalPts < 350 || !!data.claimedGold || !ramadhan;
+    if (data.claimedGold)   btnG.textContent = "✅ Diklaim";
+    else if (!ramadhan)     btnG.textContent = "🌙 Saat Ramadhan";
+    else                    btnG.textContent = "Klaim";
+  }
+  if (cardG) {
+    cardG.classList.toggle("tier-claim-unlocked", totalPts >= 350 && ramadhan);
+    cardG.classList.toggle("tier-claim-done", !!data.claimedGold);
+  }
+}
+
+// ======================
+// LOGIKA TIER — Classic<150 | Silver 150 | Platinum 225 | Gold 350
+// ======================
+function getTierInfo(totalPts) {
+  if (totalPts >= 350) return { name:"GOLD",     class:"tier-gold",     next:null,       target:350, prevTarget:225, badge:"bdg-gold"     };
+  if (totalPts >= 225) return { name:"PLATINUM", class:"tier-platinum", next:"GOLD",     target:350, prevTarget:150, badge:"bdg-platinum" };
+  if (totalPts >= 150) return { name:"SILVER",   class:"tier-silver",   next:"PLATINUM", target:225, prevTarget:0,   badge:"bdg-silver"   };
+  return                      { name:"CLASSIC",  class:"tier-classic",  next:"SILVER",   target:150, prevTarget:0,   badge:"bdg-classic"  };
 }
 
 // ======================
@@ -280,76 +417,63 @@ function getTierInfo(pts) {
 function listenCustomerPoints(wa) {
   if (!db || !wa) return;
   db.ref("customers/" + wa).on("value", function(snap) {
-    var data  = snap.val() || {};
-    var pts   = data.totalPoints || 0;
-    var total = data.totalOrders || 0;
+    var data     = snap.val() || {};
+    var currPts  = data.currentPoints || 0;
+    var totalPts = data.totalPoints   || 0;
+    var orders   = data.totalOrders   || 0;
+    var tier     = getTierInfo(totalPts);
 
-    var ptEl  = document.getElementById("myPointsVal");
-    var subEl = document.getElementById("myPointsSub");
-    var ordEl = document.getElementById("myTotalOrders");
-    var histList = document.getElementById("historyList");
-    
-    // UPDATE TIER UI
-    var tier = getTierInfo(pts);
-    var cardEl = document.getElementById("memberCard");
-    var badgeEl = document.getElementById("tierBadge");
+    var currPtEl   = document.getElementById("myCurrentPointsVal");
+    var totalPtEl  = document.getElementById("myPointsVal");
+    var subEl      = document.getElementById("myPointsSub");
+    var ordEl      = document.getElementById("myTotalOrders");
+    var histList   = document.getElementById("historyList");
+    var cardEl     = document.getElementById("memberCard");
+    var badgeEl    = document.getElementById("tierBadge");
     var progressEl = document.getElementById("tierProgress");
-    var msgEl = document.getElementById("tierMsg");
-    
-    if (ptEl)  ptEl.textContent  = pts;
-    if (ordEl) ordEl.textContent = total;
+    var msgEl      = document.getElementById("tierMsg");
+
+    if (currPtEl)  currPtEl.textContent  = currPts;
+    if (totalPtEl) totalPtEl.textContent = totalPts;
+    if (ordEl)     ordEl.textContent     = orders;
+
     if (subEl) {
-      if (pts === 0) subEl.textContent = "Belum ada poin. Yuk jajan ke toko!";
-      else if (pts < 5)  subEl.textContent = "Terus semangat jajan, poin bertambah! 🔥";
-      else if (pts < 10) subEl.textContent = "Wah, udah " + pts + " poin! Pelanggan setia nih 😍";
-      else               subEl.textContent = "Luar biasa! " + pts + " poin — VIP Nyo-Nyor! 🌶️👑";
+      if (currPts === 0)    subEl.textContent = "Belum ada poin. Yuk jajan ke toko!";
+      else if (currPts < 20) subEl.textContent = "Kumpulin terus, sebentar lagi bisa klaim! 🔥";
+      else if (currPts < 35) subEl.textContent = "Udah " + currPts + " poin! Buruan klaim boba! 🧋";
+      else                   subEl.textContent = "Wah " + currPts + " poin! Sultan banget nih! 🌶️👑";
     }
 
-    if (cardEl) cardEl.className = "points-hero-card " + tier.class;
-    if (badgeEl) badgeEl.innerHTML = "🏆 TIER: " + tier.name;
-    
+    if (cardEl)  cardEl.className       = "points-hero-card " + tier.class;
+    if (badgeEl) badgeEl.innerHTML      = "🏆 TIER: " + tier.name;
+
     if (progressEl && msgEl) {
       if (tier.next) {
-        var prevTarget = tier.name === "CLASSIC" ? 0 : (tier.name === "SILVER" ? 21 : 51);
-        var progress = ((pts - prevTarget) / (tier.target - prevTarget)) * 100;
-        progressEl.style.width = progress + "%";
-        msgEl.innerHTML = "Butuh <b>" + (tier.target - pts) + " Poin</b> untuk naik ke " + tier.next;
+        var progress = ((totalPts - tier.prevTarget) / (tier.target - tier.prevTarget)) * 100;
+        progressEl.style.width = Math.min(100, Math.max(0, progress)) + "%";
+        msgEl.innerHTML = "Butuh <b>" + (tier.target - totalPts) + " Total Poin</b> lagi untuk naik ke " + tier.next;
       } else {
         progressEl.style.width = "100%";
-        msgEl.innerHTML = "👑 Kamu adalah Pelanggan Sultan Tertinggi!";
+        msgEl.innerHTML = "👑 Kamu Pelanggan Sultan! Klaim THR saat Ramadhan!";
       }
     }
 
-    // UPDATE HISTORY
+    updateClaimButtons(currPts, totalPts, data);
+
     if (histList) {
-      var historyData = data.history || {};
-      var historyArray = Object.values(historyData).sort(function(a,b) { return b.date - a.date; }); 
+      var historyData  = data.history || {};
+      var historyArray = Object.values(historyData).sort(function(a,b) { return b.date - a.date; });
 
       if (historyArray.length === 0) {
         histList.innerHTML = '<div class="hist-empty">Belum ada riwayat transaksi.</div>';
       } else {
-        histList.innerHTML = historyArray.slice(0, 10).map(function(h) { 
-          var isEarn = h.type === "earn";
-          var dateStr = new Date(h.date).toLocaleString('id-ID', {day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'});
-          
+        histList.innerHTML = historyArray.slice(0, 10).map(function(h) {
+          var isEarn  = h.type === "earn";
+          var dateStr = new Date(h.date).toLocaleString("id-ID", {day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"});
           if (isEarn) {
-            return '<div class="hist-card earn">' +
-                     '<div class="hist-icon">🛒</div>' +
-                     '<div class="hist-info">' +
-                       '<div class="hist-title">Jajan Seblak (Rp ' + fmtRp(h.spend) + ')</div>' +
-                       '<div class="hist-date">' + dateStr + '</div>' +
-                     '</div>' +
-                     '<div class="hist-pts earn">+' + h.pts + '</div>' +
-                   '</div>';
+            return '<div class="hist-card earn"><div class="hist-icon">🛒</div><div class="hist-info"><div class="hist-title">Jajan Seblak (Rp ' + fmtRp(h.spend) + ')</div><div class="hist-date">' + dateStr + '</div></div><div class="hist-pts earn">+' + h.pts + '</div></div>';
           } else {
-            return '<div class="hist-card redeem">' +
-                     '<div class="hist-icon">🎁</div>' +
-                     '<div class="hist-info">' +
-                       '<div class="hist-title">Tukar ' + h.item + '</div>' +
-                       '<div class="hist-date">' + dateStr + '</div>' +
-                     '</div>' +
-                     '<div class="hist-pts redeem">-' + h.pts + '</div>' +
-                   '</div>';
+            return '<div class="hist-card redeem"><div class="hist-icon">🎁</div><div class="hist-info"><div class="hist-title">Tukar ' + h.item + '</div><div class="hist-date">' + dateStr + '</div></div><div class="hist-pts redeem">-' + h.pts + '</div></div>';
           }
         }).join("");
       }
@@ -378,26 +502,23 @@ function renderCustomerList() {
 
   var MEDALS = ["🥇","🥈","🥉"];
   container.innerHTML = allCustomers.map(function(c, idx) {
-    var pts     = c.totalPoints  || 0;
-    var tier    = getTierInfo(pts); // Get Tier
-    var medal   = idx < 3 ? MEDALS[idx] : (idx + 1) + ".";
-    var orders  = c.totalOrders  || 0;
-    var lastDt  = c.lastOrder ? new Date(c.lastOrder).toLocaleDateString("id-ID") : "-";
-    var barW    = allCustomers[0] && allCustomers[0].totalPoints ? Math.round((pts / allCustomers[0].totalPoints) * 100) : 100;
+    var totalPts = c.totalPoints   || 0;
+    var currPts  = c.currentPoints || 0;
+    var tier     = getTierInfo(totalPts);
+    var medal    = idx < 3 ? MEDALS[idx] : (idx + 1) + ".";
+    var orders   = c.totalOrders || 0;
+    var lastDt   = c.lastOrder ? new Date(c.lastOrder).toLocaleDateString("id-ID") : "-";
+    var barW     = allCustomers[0] && allCustomers[0].totalPoints ? Math.round((totalPts / allCustomers[0].totalPoints) * 100) : 100;
 
     return '<div class="customer-card' + (idx < 3 ? " top-customer" : "") + '">' +
       '<div class="customer-rank">' + medal + '</div>' +
       '<div class="customer-info">' +
-        // TAMPILIN BADGE TIER DI ADMIN
         '<div class="customer-name">' + (c.name || "—") + ' <span class="badge-tier ' + tier.badge + '">' + tier.name + '</span></div>' +
         '<div class="customer-wa">📱 ' + c.wa + '</div>' +
-        '<div class="customer-meta">🛒 ' + orders + ' jajan · 📅 Terakhir: ' + lastDt + '</div>' +
+        '<div class="customer-meta">⭐ ' + currPts + ' poin · 📊 ' + totalPts + ' total · 🛒 ' + orders + ' jajan · 📅 ' + lastDt + '</div>' +
         '<div class="customer-bar-wrap"><div class="customer-bar" style="width:' + barW + '%"></div></div>' +
       '</div>' +
-      '<div class="customer-pts">' +
-        '<div class="customer-pts-val">' + pts + '</div>' +
-        '<div class="customer-pts-lbl">poin</div>' +
-      '</div>' +
+      '<div class="customer-pts"><div class="customer-pts-val">' + totalPts + '</div><div class="customer-pts-lbl">total poin</div></div>' +
       '<a class="customer-wa-btn" href="https://wa.me/' + c.wa + '" target="_blank">💬</a>' +
     '</div>';
   }).join("");
@@ -419,4 +540,4 @@ function showToast(msg, type) {
     el.style.animation = "toastOut .3s ease forwards";
     setTimeout(function(){ if(el.parentNode) el.remove(); }, 300);
   }, 3200);
-   }
+}
