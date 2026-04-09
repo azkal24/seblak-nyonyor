@@ -12,11 +12,11 @@
   <link rel="stylesheet" href="./public/style.css" />
 
   <style>
-    /* Bikin Kartu Poin Jadi Kayak Kartu VIP Glow in the dark */
+    /* ── Kartu Poin VIP ── */
     .points-hero-card {
       background: linear-gradient(135deg, #1e1e2f, #3a0ca3);
       color: white;
-      border: 1px solid rgba(255,255,255,0.2);
+      border: 1px solid rgba(255, 255, 255, 0.2);
       box-shadow: 0 10px 30px rgba(114, 9, 183, 0.4);
       position: relative;
       overflow: hidden;
@@ -25,86 +25,279 @@
     .points-hero-card::before {
       content: '';
       position: absolute;
-      top: -50%; left: -50%; width: 200%; height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 60%);
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
       transform: rotate(30deg);
     }
     .points-hero-val {
       font-size: 3rem;
       text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
-      background: -webkit-linear-gradient(#feca57, #ff9f43);
+      background: linear-gradient(#feca57, #ff9f43);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
-    .points-hero-sub, .points-hero-orders { color: #d1d5db; }
-    
-    /* Tombol makin pop up pas disentuh */
-    button { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
-    button:active { transform: scale(0.95); }
-    .btn-red { box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3); }
-    
-    /* Desain Riwayat Transaksi (Timeline) */
-    .hist-sect { margin-top: 25px; }
-    .hist-sect h3 { font-size: 16px; margin-bottom: 15px; color: #1f2937; }
-    .hist-list { display: flex; flex-direction: column; gap: 12px; }
-    .hist-card {
-      background: #fff; border-radius: 12px; padding: 15px;
-      display: flex; align-items: center; justify-content: space-between;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.04); border-left: 5px solid #e5e7eb;
+    .points-hero-sub,
+    .points-hero-orders {
+      color: #d1d5db;
     }
-    .hist-card.earn { border-left-color: #10b981; } /* Hijau buat dapet poin */
-    .hist-card.redeem { border-left-color: #e11d48; } /* Merah buat tuker poin */
+
+    /* ── Tombol ── */
+    button {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+    button:active {
+      transform: scale(0.95);
+    }
+    .btn-red {
+      box-shadow: 0 4px 15px rgba(225, 29, 72, 0.3);
+    }
+
+    /* ── Riwayat Transaksi ── */
+    .hist-sect {
+      margin-top: 25px;
+    }
+    .hist-sect h3 {
+      font-size: 16px;
+      margin-bottom: 15px;
+      color: #1f2937;
+    }
+    .hist-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .hist-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+      border-left: 5px solid #e5e7eb;
+    }
+    .hist-card.earn   { border-left-color: #10b981; }
+    .hist-card.redeem { border-left-color: #e11d48; }
     .hist-icon { font-size: 24px; margin-right: 12px; }
     .hist-info { flex: 1; }
     .hist-title { font-weight: 700; font-size: 14px; color: #111827; }
-    .hist-date { font-size: 11px; color: #6b7280; margin-top: 2px; }
-    .hist-pts { font-weight: 800; font-size: 16px; }
-    .hist-pts.earn { color: #10b981; }
+    .hist-date  { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .hist-pts   { font-weight: 800; font-size: 16px; }
+    .hist-pts.earn   { color: #10b981; }
     .hist-pts.redeem { color: #e11d48; }
-    
-    /* Empty State Riwayat */
-    .hist-empty { text-align: center; padding: 20px; color: #9ca3af; font-size: 13px; background: #f9fafb; border-radius: 12px; }
+    .hist-empty {
+      text-align: center;
+      padding: 20px;
+      color: #9ca3af;
+      font-size: 13px;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
 
-    /* ================================== 
-       TAMBAHAN CSS TIER SULTAN
-       ================================== */
-    .tier-classic { background: linear-gradient(135deg, #64748b, #475569) !important; }
-    .tier-silver { background: linear-gradient(135deg, #94a3b8, #cbd5e1) !important; color: #111827 !important; }
-    .tier-gold { background: linear-gradient(135deg, #fbbf24, #d97706) !important; }
+    /* ── Tier Sultan ── */
+    .tier-classic  { background: linear-gradient(135deg, #64748b, #475569) !important; }
+    .tier-silver   { background: linear-gradient(135deg, #94a3b8, #cbd5e1) !important; color: #111827 !important; }
+    .tier-gold     { background: linear-gradient(135deg, #fbbf24, #d97706) !important; }
     .tier-platinum { background: linear-gradient(135deg, #1e1e2f, #3a0ca3) !important; }
 
     .tier-badge {
-      display: inline-block; padding: 4px 12px; border-radius: 99px;
-      font-size: 11px; font-weight: 800; background: rgba(0,0,0,.15);
-      backdrop-filter: blur(4px); margin-bottom: 12px;
-      letter-spacing: 1px; text-transform: uppercase;
-      border: 1px solid rgba(255,255,255,.2);
-      position: relative; z-index: 2;
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+      background: rgba(0, 0, 0, 0.15);
+      -webkit-backdrop-filter: blur(4px);
+      backdrop-filter: blur(4px);
+      margin-bottom: 12px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      position: relative;
+      z-index: 2;
     }
-    .tier-silver .tier-badge { background: rgba(255,255,255,.4); border-color: rgba(0,0,0,.1); color: #111827;}
-    .tier-silver .points-hero-sub, .tier-silver .points-hero-orders { color: #374151 !important; }
-    .tier-silver .points-hero-val { -webkit-text-fill-color: #111827; background: none; text-shadow: none;}
+    .tier-silver .tier-badge {
+      background: rgba(255, 255, 255, 0.4);
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #111827;
+    }
+    .tier-silver .points-hero-sub,
+    .tier-silver .points-hero-orders { color: #374151 !important; }
+    .tier-silver .points-hero-val {
+      -webkit-text-fill-color: #111827;
+      background: none;
+      text-shadow: none;
+    }
 
-    .tier-progress-wrap { background: rgba(0,0,0,0.2); border-radius: 99px; height: 6px; margin: 12px 0 6px; overflow: hidden; position: relative; z-index: 2;}
-    .tier-silver .tier-progress-wrap { background: rgba(255,255,255,0.4); }
-    .tier-progress-bar { width: 0%; background: #fff; height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+    .tier-progress-wrap {
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 99px;
+      height: 6px;
+      margin: 12px 0 6px;
+      overflow: hidden;
+      position: relative;
+      z-index: 2;
+    }
+    .tier-silver .tier-progress-wrap { background: rgba(255, 255, 255, 0.4); }
+    .tier-progress-bar {
+      width: 0%;
+      background: #fff;
+      height: 100%;
+      border-radius: 99px;
+      transition: width 0.5s ease;
+    }
     .tier-silver .tier-progress-bar { background: #111827; }
-    .tier-msg { font-size: 11px; font-weight: 600; opacity: 0.9; margin-bottom: 10px; position: relative; z-index: 2;}
+    .tier-msg {
+      font-size: 11px;
+      font-weight: 600;
+      opacity: 0.9;
+      margin-bottom: 10px;
+      position: relative;
+      z-index: 2;
+    }
 
-    /* Badge Tier Admin */
-    .badge-tier { font-size: 9px; padding: 2px 6px; border-radius: 4px; font-weight: 800; text-transform: uppercase; color: #fff; margin-left: 6px; vertical-align: middle; }
-    .bdg-classic { background: #64748b; }
-    .bdg-silver { background: #cbd5e1; color: #111827; }
-    .bdg-gold { background: #fbbf24; }
+    /* ── Badge Tier Admin ── */
+    .badge-tier {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: #fff;
+      margin-left: 6px;
+      vertical-align: middle;
+    }
+    .bdg-classic  { background: #64748b; }
+    .bdg-silver   { background: #cbd5e1; color: #111827; }
+    .bdg-gold     { background: #fbbf24; }
     .bdg-platinum { background: #3a0ca3; }
+
+    /* ── Dual Points Row (Poin & Total Poin) ── */
+    .points-dual-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 4px;
+      position: relative;
+      z-index: 2;
+    }
+    .points-dual-item {
+      flex: 1;
+      text-align: center;
+    }
+    .points-dual-divider {
+      width: 1px;
+      height: 55px;
+      background: rgba(255, 255, 255, 0.3);
+      flex-shrink: 0;
+    }
+    .tier-silver .points-dual-divider { background: rgba(0, 0, 0, 0.15); }
+    .points-dual-label {
+      font-size: 11px;
+      opacity: 0.8;
+      margin-bottom: 2px;
+    }
+    .points-dual-sub {
+      font-size: 10px;
+      opacity: 0.65;
+      margin-top: 2px;
+    }
+
+    /* ── Seksi Klaim Hadiah Kecil ── */
+    .claim-sect {
+      margin-top: 22px;
+    }
+    .claim-sect h3 {
+      font-size: 16px;
+      margin-bottom: 4px;
+      color: #1f2937;
+    }
+    .claim-desc {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 12px;
+    }
+    .claim-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .claim-btn {
+      background: linear-gradient(135deg, #e11d48, #f43f5e);
+      border: none;
+      border-radius: 14px;
+      padding: 16px 10px;
+      color: white;
+      cursor: pointer;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(225, 29, 72, 0.25);
+    }
+    .claim-btn:disabled {
+      background: #d1d5db;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.65;
+    }
+    .claim-btn-pts  { font-size: 18px; font-weight: 800; }
+    .claim-btn-name { font-size: 12px; margin-top: 4px; font-weight: 600; }
+
+    /* ── Kartu Klaim Tier ── */
+    .tier-claim-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .tier-claim-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      border-left: 5px solid #e5e7eb;
+      transition: border-left-color 0.3s ease, opacity 0.3s ease;
+    }
+    .tier-claim-card#cardSilver.tier-claim-unlocked   { border-left-color: #94a3b8; }
+    .tier-claim-card#cardPlatinum.tier-claim-unlocked { border-left-color: #3a0ca3; }
+    .tier-claim-card#cardGold.tier-claim-unlocked     { border-left-color: #fbbf24; }
+    .tier-claim-card.tier-claim-done { opacity: 0.55; }
+    .tier-claim-left  { flex: 1; }
+    .tier-claim-name  { font-weight: 800; font-size: 15px; color: #111827; }
+    .tier-claim-req   { font-size: 11px; color: #6b7280; margin-top: 2px; }
+    .tier-claim-prize { font-size: 12px; color: #e11d48; font-weight: 600; margin-top: 4px; }
+    .tier-claim-btn {
+      background: linear-gradient(135deg, #3a0ca3, #7209b7);
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      color: white;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+      margin-left: 10px;
+    }
+    .tier-claim-btn-gold {
+      background: linear-gradient(135deg, #fbbf24, #d97706);
+      color: #1f2937;
+    }
+    .tier-claim-btn:disabled {
+      background: #e5e7eb;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
   </style>
-  </head>
+</head>
 <body>
 
 <div id="splashScreen" class="splash">
   <div class="splash-content">
     <div class="splash-logo-wrap">
-      <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="splash-logo" />
+      <img src="https://i.ibb.co/vx8JS9vh/Whats-App-Image-2026-04-08-at-23-17-23-removebg-preview.png" alt="Logo" class="splash-logo" />
       <div class="splash-ring"></div>
     </div>
     <h1 class="splash-brand">Seblak Nyo-Nyor</h1>
@@ -124,7 +317,7 @@
   <div class="login-wrap">
     <div class="login-hero">
       <div class="hero-logo-ring">
-        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo Seblak Nyo-Nyor" class="hero-logo" />
+        <img src="https://i.ibb.co/vx8JS9vh/Whats-App-Image-2026-04-08-at-23-17-23-removebg-preview.png" alt="Logo Seblak Nyo-Nyor" class="hero-logo" />
       </div>
       <h1>Seblak Nyo-Nyor</h1>
       <p>🌶️ Kumpulin Poinnya, Nikmati Pedasnya!</p>
@@ -176,7 +369,7 @@
   <header class="app-bar" id="appBar">
     <div class="app-bar-inner">
       <div class="app-brand">
-        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="bar-logo" />
+        <img src="https://i.ibb.co/vx8JS9vh/Whats-App-Image-2026-04-08-at-23-17-23-removebg-preview.png" alt="Logo" class="bar-logo" />
         <div>
           <strong>Member Nyo-Nyor</strong>
           <span id="greetUser">Halo!</span>
@@ -193,35 +386,96 @@
         <p>Kumpulkan poin dari setiap porsi seblakmu!</p>
       </div>
 
+      <!-- MEMBER CARD -->
       <div class="points-hero-card" id="memberCard">
         <div class="tier-badge" id="tierBadge">🏆 TIER: CLASSIC</div>
-        <div class="points-hero-top" style="margin-bottom: 0;">
-          <div class="points-star-icon">⭐</div>
-          <div class="points-hero-info">
-            <div class="points-hero-label">Total Poin Kamu</div>
+
+        <!-- Dual Points: Poin (klaim kecil) + Total Poin (tier) -->
+        <div class="points-dual-row">
+          <div class="points-dual-item">
+            <div class="points-dual-label">⭐ Poin Kamu</div>
+            <div class="points-hero-val" id="myCurrentPointsVal">0</div>
+            <div class="points-dual-sub">untuk klaim hadiah</div>
+          </div>
+          <div class="points-dual-divider"></div>
+          <div class="points-dual-item">
+            <div class="points-dual-label">📊 Total Poin</div>
             <div class="points-hero-val" id="myPointsVal">0</div>
+            <div class="points-dual-sub">untuk naik tier</div>
           </div>
         </div>
-        
+
         <div class="tier-progress-wrap">
-           <div id="tierProgress" class="tier-progress-bar"></div>
+          <div id="tierProgress" class="tier-progress-bar"></div>
         </div>
-        <div class="tier-msg" id="tierMsg">Butuh 21 Poin untuk naik ke SILVER</div>
+        <div class="tier-msg" id="tierMsg">Butuh 150 Total Poin untuk naik ke SILVER</div>
 
         <div class="points-hero-sub" id="myPointsSub">Belum ada poin. Yuk jajan ke toko!</div>
         <div class="points-hero-orders">🛒 Total Jajan: <strong id="myTotalOrders">0</strong> kali</div>
       </div>
 
-      <div class="hist-sect">
-        <h3>📜 Riwayat Terakhir</h3>
-        <div id="historyList" class="hist-list">
-          </div>
-      </div>
-      <div class="points-redeem-card mt-4">
-        <div class="points-redeem-title">🏪 Cara Menukar Poin</div>
-        <p class="points-redeem-desc">Poin ditambahkan otomatis oleh kasir. Poin bisa ditukar dengan topping gratis atau diskon saat jajan langsung di toko!</p>
+      <!-- KLAIM HADIAH KECIL (potong Poin, Total Poin tidak berubah) -->
+      <div class="claim-sect">
+        <h3>🎁 Klaim Hadiah Poin</h3>
+        <p class="claim-desc">Tukar poin kamu langsung di kasir. Total poin tidak berkurang!</p>
+        <div class="claim-grid">
+          <button class="claim-btn" id="btnKlaim20" onclick="klaimHadiahKecil(20, 'Boba Coklat 6k')" disabled>
+            <div class="claim-btn-pts">20 ⭐</div>
+            <div class="claim-btn-name">Boba Coklat 6k</div>
+          </button>
+          <button class="claim-btn" id="btnKlaim35" onclick="klaimHadiahKecil(35, '1 Paket Seblak 10k')" disabled>
+            <div class="claim-btn-pts">35 ⭐</div>
+            <div class="claim-btn-name">1 Paket Seblak 10k</div>
+          </button>
+        </div>
       </div>
 
+      <!-- KLAIM HADIAH TIER (berdasarkan Total Poin, 1x per tier) -->
+      <div class="claim-sect">
+        <h3>🏆 Klaim Hadiah Tier</h3>
+        <p class="claim-desc">Klaim 1x per tier dari total poin. Tunjukkan ke kasir saat klaim!</p>
+        <div class="tier-claim-list">
+
+          <div class="tier-claim-card" id="cardSilver">
+            <div class="tier-claim-left">
+              <div class="tier-claim-name">🥈 Silver</div>
+              <div class="tier-claim-req">150 Total Poin · 1x Klaim</div>
+              <div class="tier-claim-prize">2 Porsi Seblak Paketan 15k 🍜</div>
+            </div>
+            <button class="tier-claim-btn" id="btnKlaimSilver" onclick="klaimTier('silver')" disabled>Klaim</button>
+          </div>
+
+          <div class="tier-claim-card" id="cardPlatinum">
+            <div class="tier-claim-left">
+              <div class="tier-claim-name">💎 Platinum</div>
+              <div class="tier-claim-req">225 Total Poin · 1x Klaim</div>
+              <div class="tier-claim-prize">2 Porsi Seblak Paketan 20k 🍜</div>
+            </div>
+            <button class="tier-claim-btn" id="btnKlaimPlatinum" onclick="klaimTier('platinum')" disabled>Klaim</button>
+          </div>
+
+          <div class="tier-claim-card" id="cardGold">
+            <div class="tier-claim-left">
+              <div class="tier-claim-name">🥇 Gold</div>
+              <div class="tier-claim-req">350 Total Poin · Hanya Saat Ramadhan 🌙</div>
+              <div class="tier-claim-prize">THR Ramadhan (Reset Poin Baru)</div>
+            </div>
+            <button class="tier-claim-btn tier-claim-btn-gold" id="btnKlaimGold" onclick="klaimTier('gold')" disabled>🌙 Saat Ramadhan</button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- RIWAYAT -->
+      <div class="hist-sect">
+        <h3>📜 Riwayat Terakhir</h3>
+        <div id="historyList" class="hist-list"></div>
+      </div>
+
+      <div class="points-redeem-card mt-4">
+        <div class="points-redeem-title">🏪 Info Poin</div>
+        <p class="points-redeem-desc">Poin ditambahkan otomatis oleh kasir. Klaim hadiah langsung di toko dengan menunjukkan halaman ini!</p>
+      </div>
     </div>
 
   </main>
@@ -243,7 +497,7 @@
   <header class="app-bar app-bar-dark">
     <div class="app-bar-inner">
       <div class="app-brand">
-        <img src="https://i.postimg.cc/7GQCHT8k/logo.jpg" alt="Logo" class="bar-logo" />
+        <img src="https://i.ibb.co/vx8JS9vh/Whats-App-Image-2026-04-08-at-23-17-23-removebg-preview.png" alt="Logo" class="bar-logo" />
         <div>
           <strong>Sistem Kasir</strong>
           <span>Seblak Nyo-Nyor</span>
@@ -291,7 +545,7 @@
 
       <div class="form-pane" style="background:#fff; padding:20px; border-radius:16px; margin-top:20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border: 2px solid #ffe4e6;">
         <h3 style="margin-top:0; color:#e11d48; font-size:16px;">🎁 Tukar Poin (Potong Poin)</h3>
-        <p style="font-size:13px; color:#666; margin-bottom:15px;">Gunakan form ini untuk <b>mengurangi poin</b> saat pelanggan menukarkan poinnya.</p>
+        <p style="font-size:13px; color:#666; margin-bottom:15px;">Gunakan form ini untuk <b>mengurangi poin</b> saat pelanggan menukarkan poinnya. <b>Total Poin tidak berkurang.</b></p>
         
         <div class="field">
           <label>Nomor WA Pelanggan</label>
@@ -323,7 +577,7 @@
 
     <div id="adminTabCustomers" class="d-none">
       <div class="customers-header">
-        <p class="customers-desc">Daftar pelanggan berdasarkan jumlah poin. Semakin besar poin = semakin sering jajan!</p>
+        <p class="customers-desc">Daftar pelanggan berdasarkan total poin. Semakin besar poin = semakin sering jajan!</p>
       </div>
       <div id="customerList" class="customer-list"></div>
     </div>
@@ -333,6 +587,6 @@
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="./public/kasir.js?v=8"></script>
+<script src="./public/kasir.js?v=9"></script>
 </body>
-  </html>
+</html>
