@@ -288,8 +288,6 @@ function klaimHadiahKecil(pts, itemName) {
 
 // ======================
 // KLAIM HADIAH TIER (Silver / Platinum / Gold)
-// Silver & Platinum: hanya mark claimed, totalPoints TIDAK berubah
-// Gold: mark + RESET semua (1 siklus selesai)
 // ======================
 function klaimTier(tier) {
   if (!currentUser || !db) { showToast("Kamu harus login dulu!", "error"); return; }
@@ -316,23 +314,32 @@ function klaimTier(tier) {
     var updates = {};
     updates[cfg.field] = true;
 
+    // FIX CLAUDE: Set history potong poin ke 0 untuk Silver & Platinum (Karna poin ga berkurang)
+    var ptsHistoryDisplay = 0; 
+
+    // JIKA KLAIM GOLD (THR RAMADHAN) -> RESET TOTAL! (Sesuai request: "Angus ngulang lagi dari awal")
     if (tier === "gold") {
       updates.totalPoints      = 0;
+      updates.currentPoints    = 0; // FIX CLAUDE: Poin receh juga WAJIB hangus biar beneran ngulang dari 0!
       updates.claimedSilver    = false;
       updates.claimedPlatinum  = false;
       updates.claimedGold      = false;
+      ptsHistoryDisplay        = totalPts; // Catat di riwayat kalau semua poinnya ditarik/hangus
     }
 
     ref.update(updates).then(function() {
       db.ref("customers/" + wa + "/history").push({
-        type: "redeem", pts: cfg.minPts,
+        type: "redeem",
+        pts: ptsHistoryDisplay,
         item: "Hadiah Tier " + tier.toUpperCase() + ": " + cfg.prize,
         date: Date.now()
       });
+
       if (tier === "gold") {
-        showToast("🎊 Selamat! THR Ramadhan diklaim! Total poin di-reset untuk siklus baru.", "success");
+        showToast("🎊 Selamat! THR Ramadhan diklaim! Semua poin hangus & ngulang dari awal.", "success");
       } else {
-        showToast("🎉 Selamat! Kamu klaim " + cfg.prize + "! 🍜 Tunjukkan ke kasir ya!", "success");
+        // FIX Notifikasi biar pelanggan tenang
+        showToast("🎉 Selamat! Kamu klaim " + cfg.prize + "! Total Poin AMAN (tidak berkurang).", "success");
       }
     }).catch(function() {
       showToast("Gagal klaim hadiah tier, coba lagi!", "error");
